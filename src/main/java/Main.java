@@ -5,7 +5,6 @@ import rabbitmq.enums.CacheType;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -16,7 +15,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         // Providing breathing space for setup.
-        Thread.sleep(10000);
+        Thread.sleep(30000);
 
         String message = "Hello AMQP";
 
@@ -26,22 +25,14 @@ public class Main {
                                             .priority(Thread.NORM_PRIORITY)
                                             .build();
 
-        ExecutorService threadPool = Executors.newFixedThreadPool(5, factory);
+        ExecutorService threadPool = Executors.newFixedThreadPool(10, factory);
 
         for (int i = 1; i <= 1000000; i++) {
             System.out.println(i);
             int finalI = i;
 
-//            if (i % 5 == 0) {
-//                Thread.sleep(1000);
-//            }
-
-            threadPool.submit(new Runnable() {
-                @Override
-                public void run() {
-                    messagePublisher.publishMessage("testExchange", "testRoutingKey1", message + String.valueOf(finalI));
-                }
-            });
+            threadPool.submit(() -> messagePublisher
+                    .publishMessage("testExchange", "testRoutingKey1", message + String.valueOf(finalI)));
         }
 
         // Wait for 1 minutes to ensure already submitted tasks get executed
